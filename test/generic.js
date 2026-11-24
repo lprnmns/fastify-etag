@@ -215,4 +215,44 @@ module.exports = async function (t, etagOpts, hashFn) {
     t.assert.deepStrictEqual(res.statusCode, 404)
     t.assert.deepStrictEqual(JSON.parse(res.body), { hello: 'world' })
   })
+
+  await t.test('returns a 304 for a HEAD request if etag matches', async (t) => {
+    const res = await build().inject({
+      method: 'HEAD',
+      url: '/',
+      headers: {
+        'If-None-Match': hash
+      }
+    })
+
+    t.assert.deepStrictEqual(res.statusCode, 304)
+    t.assert.deepStrictEqual(res.body, '')
+    t.assert.deepStrictEqual(res.headers.etag, hash)
+  })
+
+  await t.test('returns a 304 for a HEAD request if If-None-Match is *', async (t) => {
+    const res = await build().inject({
+      method: 'HEAD',
+      url: '/',
+      headers: {
+        'If-None-Match': '*'
+      }
+    })
+
+    t.assert.deepStrictEqual(res.statusCode, 304)
+    t.assert.deepStrictEqual(res.body, '')
+  })
+
+  await t.test('does not return a 304 if the request has Cache-Control: no-cache', async (t) => {
+    const res = await build().inject({
+      url: '/',
+      headers: {
+        'If-None-Match': hash,
+        'Cache-Control': 'max-age=0, no-cache'
+      }
+    })
+
+    t.assert.deepStrictEqual(res.statusCode, 200)
+    t.assert.deepStrictEqual(JSON.parse(res.body), { hello: 'world' })
+  })
 }

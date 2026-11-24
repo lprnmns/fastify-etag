@@ -75,11 +75,15 @@ async function fastifyEtag (app, { algorithm, hashFn, weak, replyWith304 = true 
 
     if (replyWith304 && isFresh(req, reply, etag)) {
       reply.code(304)
-      newPayload = null
+      // Fastify's automatic HEAD route throws on a null payload and sends no
+      // body for HEAD anyway
+      if (req.method !== 'HEAD') newPayload = null
     }
     done(null, newPayload)
   })
 }
+
+const NO_CACHE_RE = /(?:^|,)\s*no-cache\s*(?:,|$)/
 
 // Same conditions as Express' `req.fresh`: only GET and HEAD requests with a
 // 2xx (or 304) response are answered with a 304, and If-None-Match is a list
@@ -95,7 +99,13 @@ function isFresh (req, reply, etag) {
     return false
   }
 
-  if (ifNoneMatch.trim() === '*') {
+  // Like Express, a request with `Cache-Control: no-cache` always gets the full response
+  const cacheControl = req.headers['cache-control']
+  if (cacheControl && NO_CACHE_RE.test(cacheControl)) {
+    return false
+  }
+
+  if (ifNoneMatch === etag || ifNoneMatch.trim() === '*') {
     return true
   }
 

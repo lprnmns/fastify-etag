@@ -88,7 +88,7 @@ app.listen(3000)
 
 ### Automatic 304 status codes
 
-By default, the plugin sends a 304 status code for `GET` and `HEAD` requests with a 2xx response when the ETag matches one of the ETags in the if-none-match request header (or the header is `*`), like Express does.
+By default, the plugin sends a 304 status code for `GET` and `HEAD` requests with a 2xx response when the ETag matches one of the ETags in the if-none-match request header (or the header is `*`), like Express does. As in Express, a request with `Cache-Control: no-cache` always gets the full response.
 
 This is often the desired behavior, but can be disabled by setting `replyWith304: false`.
 
