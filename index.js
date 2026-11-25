@@ -85,9 +85,9 @@ async function fastifyEtag (app, { algorithm, hashFn, weak, replyWith304 = true 
 
 const NO_CACHE_RE = /(?:^|,)\s*no-cache\s*(?:,|$)/
 
-// Same conditions as Express' `req.fresh`: only GET and HEAD requests with a
-// 2xx (or 304) response are answered with a 304, and If-None-Match is a list
-// of entity tags compared with the weak comparison function (RFC 9110 13.1.2)
+// Only GET and HEAD requests with a 2xx (or 304) response are answered with a
+// 304. If-None-Match is a list of entity tags compared with the weak
+// comparison function (RFC 9110 13.1.2)
 function isFresh (req, reply, etag) {
   const ifNoneMatch = req.headers['if-none-match']
   if (!ifNoneMatch || (req.method !== 'GET' && req.method !== 'HEAD')) {
@@ -99,7 +99,7 @@ function isFresh (req, reply, etag) {
     return false
   }
 
-  // Like Express, a request with `Cache-Control: no-cache` always gets the full response
+  // A request with `Cache-Control: no-cache` always gets the full response
   const cacheControl = req.headers['cache-control']
   if (cacheControl && NO_CACHE_RE.test(cacheControl)) {
     return false
